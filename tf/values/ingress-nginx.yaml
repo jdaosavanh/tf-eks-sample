@@ -1,0 +1,15 @@
+controller:
+  # We do not support namespaced IngressClasses, yet, so a ClusterRole and a ClusterRoleBinding is required.
+  ingressClassResource:
+    # -- Name of the IngressClass
+    name: external-nginx
+#  admissionWebhooks:
+#    enabled: false
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+#  watchIngressWithoutClass: true
+#  extraArgs:
+#    ingress-class: external-nginx

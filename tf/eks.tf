@@ -111,3 +111,50 @@ resource "aws_eks_node_group" "example" {
   }
 
 }
+
+data "aws_iam_policy_document" "eks-view" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "eks:DescribeCluster",
+      "eks:ListCluster",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "viewer-role" {
+  name = "${local.default_name}-eks-viewer-role-policy"
+  policy = data.aws_iam_policy_document.eks-view.json
+}
+
+data "aws_iam_policy_document" "viewer-assume" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["ENTER_ROLE_ARN"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "eks-viewer" {
+  name_prefix = "${local.default_name}-eks-viewer-role"
+  assume_role_policy = data.aws_iam_policy_document.viewer-assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "eks-viewer-attachment" {
+  policy_arn = aws_iam_policy.viewer-role.arn
+  role       = aws_iam_role.eks-viewer.name
+}
+
+resource "aws_eks_access_entry" "viewer" {
+  cluster_name      = aws_eks_cluster.eks.name
+  principal_arn     = aws_iam_role.eks-viewer.arn
+  kubernetes_groups = ["viewers"]
+}
